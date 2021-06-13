@@ -1,8 +1,8 @@
 # r-wlw-bot, a Bot for Discord
 
-[![Discord](https://discordapp.com/api/guilds/656888365886734340/widget.png?style=shield)](https://discord.gg/SwyjdDN)
+[![Discord](https://discordapp.com/api/guilds/837744723183140924/widget.png?style=shield)](https://discord.gg/YrJWRrND7T)
 
-A discord bot with ham radio functionalities.
+A bot with various functions for the r/wlw discord server, written in Python.
 
 ## Running
 
