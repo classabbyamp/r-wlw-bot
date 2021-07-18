@@ -8,7 +8,6 @@ the GNU General Public License, version 2.
 """
 
 
-from typing import Union
 from datetime import datetime
 from io import BytesIO
 import asyncio
@@ -39,11 +38,10 @@ class RedditCog(commands.Cog):
         self.mod_chan = self.bot.get_channel(opt.mod_feed_channel)
 
         subreddit = await self.reddit.subreddit(opt.subreddit)
-        post_stream = subreddit.stream.submissions(skip_existing=True)
 
         while not self.bot.is_closed():
             try:
-                async for post in post_stream:
+                async for post in subreddit.stream.submissions(skip_existing=True, pause_after=0):
                     selftext_file = None
                     if post:
                         preview = discord.Embed(colour=cmn.colours.pink)
@@ -83,7 +81,6 @@ class RedditCog(commands.Cog):
                             else:
                                 full.description = post.selftext
 
-                        # TODO pub_chan
                         if self.pub_chan:
                             await self.pub_chan.send(embed=preview)
                         if self.mod_chan:
@@ -95,16 +92,18 @@ class RedditCog(commands.Cog):
                         await asyncio.sleep(10)
             except Exception as e:
                 print(e)
+                self.mod_chan.send((f"<@!{opt.owners_uids[0]}>, the post feed seems to be broken!\n"
+                                    f"See error message:\n```\n{e}\n```"),
+                                   allowed_mentions=discord.AllowedMentions.all())
                 await asyncio.sleep(30)
 
     @commands.Cog.listener("on_ready")
     async def comment_feed(self):
         subreddit = await self.reddit.subreddit(opt.subreddit)
-        comment_stream = subreddit.stream.comments(skip_existing=True)
 
         while not self.bot.is_closed():
             try:
-                async for com in comment_stream:
+                async for com in subreddit.stream.comments(skip_existing=True, pause_after=0):
                     body_file = None
                     if com:
                         embed = discord.Embed(colour=cmn.colours.purple)
@@ -144,15 +143,10 @@ class RedditCog(commands.Cog):
                         await asyncio.sleep(10)
             except Exception as e:
                 print(e)
+                self.mod_chan.send((f"<@!{opt.owners_uids[0]}>, the comment feed seems to be broken!\n"
+                                    f"See error message:\n```\n{e}\n```"),
+                                   allowed_mentions=discord.AllowedMentions.all())
                 await asyncio.sleep(30)
-
-
-async def post_to_feed(submission: Union[asyncpraw.reddit.Submission, asyncpraw.reddit.Comment],
-                       channel: discord.TextChannel, full: bool = False):
-    if isinstance(submission, asyncpraw.reddit.Submission):
-        await channel.send("new post: " + submission.id)
-    else:
-        await channel.send("new comment: " + submission.id)
 
 
 def setup(bot: commands.Bot):
